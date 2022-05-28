@@ -9,7 +9,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import static java.nio.file.StandardOpenOption.READ;
@@ -51,7 +50,7 @@ public class MyTail implements Callable<Integer> {
             fc.read(buffer);
 
             // 出力
-            printTail(new String(buffer.array(), StandardCharsets.UTF_8).lines().toList());
+            printTail(buffer.array());
         } catch (IOException e) {
             // TODO 出力方法の検討
             e.printStackTrace();
@@ -63,6 +62,7 @@ public class MyTail implements Callable<Integer> {
     /**
      * 末尾を読み取る際の参考となる推測バイト数を返す。先頭n行を読み込み、そのうち一番長かった行のバイト数 × nを返す
      * @return 末尾の推定バイト数
+     * @throws IOException ファイル読み取り時にエラーが発生した場合
      */
     private int inferByteSize() throws IOException {
         try(var lines = Files.lines(file.toPath())) {
@@ -79,8 +79,10 @@ public class MyTail implements Callable<Integer> {
 
     /**
      * ファイルの末尾の指定された行数分だけ出力する
+     * @param bytes 出力するデータ
      */
-    private void printTail(List<String> lines) {
+    private void printTail(byte[] bytes) {
+        var lines = new String(bytes, StandardCharsets.UTF_8).lines().toList();
         int lineCount = lines.size();
 
         lines.stream()
