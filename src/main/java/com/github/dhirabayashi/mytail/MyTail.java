@@ -9,6 +9,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import static java.nio.file.StandardOpenOption.READ;
@@ -30,27 +31,46 @@ public class MyTail implements Callable<Integer> {
     @Override
     public Integer call() {
         // 先頭から全部読むと遅いため、適当な位置までスキップしてそれ以降から読み取る
-        // TODO 読み取った内容では指定行数に到達しない場合の考慮
         // TODO マルチバイト文字をぶった斬ってしまった場合の考慮
         try(var fc = FileChannel.open(file.toPath(), READ)) {
             // スキップ位置の推測
             var byteSize = inferByteSize();
-            // ファイルサイズより大きくなってしまったらファイル全体が読まれるように調整
-            if(byteSize > fc.size()) {
-                byteSize = (int)fc.size();
+
+            var coefficient = 1;
+            while(true) {
+                byteSize *= coefficient;
+                // ファイルサイズより大きくなってしまったらファイル全体が読まれるように調整
+                var displayWhole = false;
+                if(byteSize > fc.size()) {
+                    byteSize = (int)fc.size();
+                    displayWhole = true;
+                }
+
+                // バッファ
+                var buffer = ByteBuffer.allocate(byteSize);
+
+                // スキップ
+                fc.position(fc.size() - byteSize);
+
+                // 読み取り
+                fc.read(buffer);
+
+                // 出力
+                var tmpLines = new String(buffer.array(), StandardCharsets.UTF_8).lines().toList();
+
+                var displayLines = tmpLines.stream()
+                        .skip(Math.max(0, tmpLines.size() - numberLines))
+                        .toList();
+
+                // 足りていれば出力（行数が同じの場合、最初の行が完全でない可能性があるため足りないとみなす）
+                if(displayWhole || tmpLines.size() > displayLines.size()) {
+                    displayLines.forEach(System.out::println);
+                    break;
+                } else {
+                    // 足りなかったら係数を増やしてやり直す
+                    coefficient++;
+                }
             }
-
-            // バッファ
-            var buffer = ByteBuffer.allocate(byteSize);
-
-            // スキップ
-            fc.position(fc.size() - byteSize);
-
-            // 読み取り
-            fc.read(buffer);
-
-            // 出力
-            printTail(buffer.array());
         } catch (IOException e) {
             // TODO 出力方法の検討
             e.printStackTrace();
@@ -75,18 +95,5 @@ public class MyTail implements Callable<Integer> {
             // 念の為2倍にして返す
             return maxByteSize * numberLines *  2;
         }
-    }
-
-    /**
-     * ファイルの末尾の指定された行数分だけ出力する
-     * @param bytes 出力するデータ
-     */
-    private void printTail(byte[] bytes) {
-        var lines = new String(bytes, StandardCharsets.UTF_8).lines().toList();
-        int lineCount = lines.size();
-
-        lines.stream()
-                .skip(Math.max(0, lineCount - numberLines))
-                .forEach(System.out::println);
     }
 }
