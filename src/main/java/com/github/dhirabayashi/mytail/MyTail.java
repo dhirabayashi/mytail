@@ -9,7 +9,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import static java.nio.file.StandardOpenOption.READ;
@@ -31,7 +30,6 @@ public class MyTail implements Callable<Integer> {
     @Override
     public Integer call() {
         // 先頭から全部読むと遅いため、適当な位置までスキップしてそれ以降から読み取る
-        // TODO マルチバイト文字をぶった斬ってしまった場合の考慮
         try(var fc = FileChannel.open(file.toPath(), READ)) {
             // スキップ位置の推測
             var byteSize = inferByteSize();
