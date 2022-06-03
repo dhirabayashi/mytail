@@ -9,6 +9,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import static java.nio.file.StandardOpenOption.READ;
@@ -16,8 +17,8 @@ import static java.nio.file.StandardOpenOption.READ;
 @CommandLine.Command(name = "mytail", mixinStandardHelpOptions = true, version = "mytail 0.1",
         description = "display the last part of a file")
 public class MyTail implements Callable<Integer> {
-    @CommandLine.Parameters(index = "0", description = "The file for display.")
-    private File file;
+    @CommandLine.Parameters(description = "The file for display.")
+    private List<File> files;
 
     @CommandLine.Option(names = {"-n", "--lines"}, description = "The location is number lines.")
     private int numberLines = 10;
@@ -29,10 +30,40 @@ public class MyTail implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        int wholeExitCode = 0;
+        int length = files.size();
+        for(int i = 0; i < length; i++) {
+            var file = files.get(i);
+
+            // ファイル名の表示
+            if(this.files.size() != 1) {
+                System.out.printf("==> %s <==%n", file.toString());
+            }
+
+            // 実行
+            int exitCode = execute(file);
+            // 終了コードが0でないことが一度でもあれば、全体の終了コードは0以外
+            if(exitCode != 0) {
+                wholeExitCode = exitCode;
+            }
+
+            if(i != length - 1) {
+                System.out.println();
+            }
+        }
+        return wholeExitCode;
+    }
+
+    /**
+     * 処理本体
+     * @param file ファイルパス
+     * @return 終了コード
+     */
+    private int execute(File file) {
         // 先頭から全部読むと遅いため、適当な位置までスキップしてそれ以降から読み取る
         try(var fc = FileChannel.open(file.toPath(), READ)) {
             // スキップ位置の推測
-            var byteSize = inferByteSize();
+            var byteSize = inferByteSize(file);
 
             var coefficient = 1;
             while(true) {
@@ -79,10 +110,11 @@ public class MyTail implements Callable<Integer> {
 
     /**
      * 末尾を読み取る際の参考となる推測バイト数を返す。先頭n行を読み込み、そのうち一番長かった行のバイト数 × nを返す
+     * @param file ファイルパス
      * @return 末尾の推定バイト数
      * @throws IOException ファイル読み取り時にエラーが発生した場合
      */
-    private int inferByteSize() throws IOException {
+    private int inferByteSize(File file) throws IOException {
         try(var lines = Files.lines(file.toPath())) {
             var maxByteSize = lines
                     .limit(numberLines)
