@@ -60,6 +60,11 @@ public class MyTail implements Callable<Integer> {
      * @return 終了コード
      */
     private int execute(File file) {
+        if(!file.exists()) {
+            System.err.printf("mytail: %s: No such file or directory\n", file);
+            return 1;
+        }
+
         // 先頭から全部読むと遅いため、適当な位置までスキップしてそれ以降から読み取る
         try(var fc = FileChannel.open(file.toPath(), READ)) {
             // スキップ位置の推測
@@ -101,7 +106,6 @@ public class MyTail implements Callable<Integer> {
                 }
             }
         } catch (IOException e) {
-            // TODO 出力方法の検討
             e.printStackTrace();
             return 1;
         }
