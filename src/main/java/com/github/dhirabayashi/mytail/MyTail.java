@@ -1,5 +1,7 @@
 package com.github.dhirabayashi.mytail;
 
+import com.github.dhirabayashi.mytail.file.api.FileWrapper;
+import com.github.dhirabayashi.mytail.file.impl.FileWrapperImpl;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -17,14 +19,34 @@ import static java.nio.file.StandardOpenOption.READ;
 @CommandLine.Command(name = "mytail", mixinStandardHelpOptions = true, version = "mytail 0.1",
         description = "display the last part of a file")
 public class MyTail implements Callable<Integer> {
+    /**
+     * 読み取り対象のファイル
+     */
     @CommandLine.Parameters(description = "The file for display.")
     private List<File> files;
 
+    /**
+     * ファイルの読み取り行数
+     */
     @CommandLine.Option(names = {"-n", "--lines"}, description = "The location is number lines.")
     private int numberLines = 10;
 
+    /**
+     * ファイル読み取り部分を扱うインスタンス
+     */
+    private final FileWrapper fileWrapper;
+
+    /**
+     * ファイルラッパーを指定してMyTailを構築する
+     * @param fileWrapper ファイル読み取り部分を扱うインスタンス
+     */
+    public MyTail(FileWrapper fileWrapper) {
+        this.fileWrapper = fileWrapper;
+    }
+
+
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new MyTail()).execute(args);
+        int exitCode = new CommandLine(new MyTail(new FileWrapperImpl())).execute(args);
         System.exit(exitCode);
     }
 
@@ -119,7 +141,7 @@ public class MyTail implements Callable<Integer> {
      * @throws IOException ファイル読み取り時にエラーが発生した場合
      */
     private int inferByteSize(File file) throws IOException {
-        try(var lines = Files.lines(file.toPath())) {
+        try(var lines = fileWrapper.lines(file.toPath())) {
             var maxByteSize = lines
                     .limit(numberLines)
                     .map(line -> line.getBytes(StandardCharsets.UTF_8).length + 1) // 1を足すのは改行コード分
