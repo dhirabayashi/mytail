@@ -7,14 +7,10 @@ import picocli.CommandLine;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
-
-import static java.nio.file.StandardOpenOption.READ;
 
 @CommandLine.Command(name = "mytail", mixinStandardHelpOptions = true, version = "mytail 0.1",
         description = "display the last part of a file")
@@ -43,7 +39,6 @@ public class MyTail implements Callable<Integer> {
     public MyTail(FileWrapper fileWrapper) {
         this.fileWrapper = fileWrapper;
     }
-
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new MyTail(new FileWrapperImpl())).execute(args);
@@ -88,7 +83,7 @@ public class MyTail implements Callable<Integer> {
         }
 
         // 先頭から全部読むと遅いため、適当な位置までスキップしてそれ以降から読み取る
-        try(var fc = FileChannel.open(file.toPath(), READ)) {
+        try(var fc = fileWrapper.open(file.toPath())) {
             // スキップ位置の推測
             var byteSize = inferByteSize(file);
 

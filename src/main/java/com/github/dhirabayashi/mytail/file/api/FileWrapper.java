@@ -14,4 +14,12 @@ public interface FileWrapper {
      * @return テキストファイルの行単位のストリーム
      */
     Stream<String> lines(Path path) throws IOException;
+
+    /**
+     * 読み取り用ファイルチャンネルを開く
+     * @param path 対象ファイルのパス
+     * @return ファイルチャンネル
+     * @throws IOException 入出力エラーが発生した場合
+     */
+    FileChannelWrapper open(Path path) throws IOException;
 }

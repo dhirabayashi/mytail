@@ -1,5 +1,6 @@
 package com.github.dhirabayashi.mytail.file.impl;
 
+import com.github.dhirabayashi.mytail.file.api.FileChannelWrapper;
 import com.github.dhirabayashi.mytail.file.api.FileWrapper;
 
 import java.io.IOException;
@@ -14,5 +15,10 @@ public class FileWrapperImpl implements FileWrapper {
     @Override
     public Stream<String> lines(Path path) throws IOException {
         return Files.lines(path);
+    }
+
+    @Override
+    public FileChannelWrapper open(Path path) throws IOException {
+        return new FileChannelWrapperImpl(path);
     }
 }
