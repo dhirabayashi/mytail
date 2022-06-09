@@ -2,12 +2,14 @@ package com.github.dhirabayashi.mytail;
 
 import com.github.dhirabayashi.mytail.file.api.FileWrapper;
 import com.github.dhirabayashi.mytail.file.impl.FileWrapperImpl;
+import org.apache.commons.lang3.tuple.Pair;
 import picocli.CommandLine;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -58,7 +60,14 @@ public class MyTail implements Callable<Integer> {
             }
 
             // 実行
-            int exitCode = execute(file);
+            var pair = readLines(file);
+
+            // 表示
+            var lines = pair.getLeft();
+            lines.forEach(System.out::println);
+
+            int exitCode = pair.getRight();
+
             // 終了コードが0でないことが一度でもあれば、全体の終了コードは0以外
             if(exitCode != 0) {
                 wholeExitCode = exitCode;
@@ -72,14 +81,14 @@ public class MyTail implements Callable<Integer> {
     }
 
     /**
-     * 処理本体
+     * ファイルから表示する行を取得する
      * @param file ファイルパス
-     * @return 終了コード
+     * @return 行と終了コードの組
      */
-    private int execute(File file) {
+    Pair<List<String>, Integer> readLines(File file) {
         if(!file.exists()) {
             System.err.printf("mytail: %s: No such file or directory\n", file);
-            return 1;
+            return Pair.of(Collections.emptyList(), 1);
         }
 
         // 先頭から全部読むと遅いため、適当な位置までスキップしてそれ以降から読み取る
@@ -115,8 +124,7 @@ public class MyTail implements Callable<Integer> {
 
                 // 足りていれば出力（行数が同じの場合、最初の行が完全でない可能性があるため足りないとみなす）
                 if(displayWhole || tmpLines.size() > displayLines.size()) {
-                    displayLines.forEach(System.out::println);
-                    break;
+                    return Pair.of(displayLines, 0);
                 } else {
                     // 足りなかったら係数を増やしてやり直す
                     coefficient++;
@@ -124,9 +132,8 @@ public class MyTail implements Callable<Integer> {
             }
         } catch (IOException e) {
             e.printStackTrace();
-            return 1;
+            return Pair.of(Collections.emptyList(), 1);
         }
-        return 0;
     }
 
     /**
