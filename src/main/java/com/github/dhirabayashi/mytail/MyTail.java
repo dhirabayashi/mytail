@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+@SuppressWarnings("SameParameterValue")
 @CommandLine.Command(name = "mytail", mixinStandardHelpOptions = true, version = "mytail 0.1",
         description = "display the last part of a file")
 public class MyTail implements Callable<Integer> {
@@ -113,7 +114,7 @@ public class MyTail implements Callable<Integer> {
                 fc.position(fc.size() - byteSize);
 
                 // 読み取り
-                fc.read(buffer);
+                buffer = fc.read(buffer);
 
                 // 出力
                 var tmpLines = new String(buffer.array(), StandardCharsets.UTF_8).lines().toList();
@@ -153,5 +154,13 @@ public class MyTail implements Callable<Integer> {
             // 念の為2倍にして返す
             return maxByteSize * numberLines *  2;
         }
+    }
+
+    /**
+     * 表示行数を設定する（テスト用）
+     * @param numberLines 表示行数
+     */
+    void setNumberLines(int numberLines) {
+        this.numberLines = numberLines;
     }
 }

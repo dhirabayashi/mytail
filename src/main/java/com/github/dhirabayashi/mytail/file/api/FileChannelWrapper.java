@@ -25,7 +25,8 @@ public interface FileChannelWrapper extends Closeable {
     /**
      * ファイルの内容を読み取ってバッファに設定する
      * @param dst 内容を設定するバッファ
+     * @return バッファ
      * @throws IOException 入出力エラーが発生した場合
      */
-    void read(ByteBuffer dst) throws IOException;
+    ByteBuffer read(ByteBuffer dst) throws IOException;
 }
