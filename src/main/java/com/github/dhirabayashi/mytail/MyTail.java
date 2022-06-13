@@ -9,9 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings("SameParameterValue")
@@ -50,6 +48,22 @@ public class MyTail implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        // ファイルが指定されない場合は標準入力から読む
+        if(files == null) {
+            var scanner = new Scanner(System.in);
+            var lines = new ArrayList<String>();
+            while(scanner.hasNext()) {
+                lines.add(scanner.nextLine());
+            }
+
+            var skipNum = Math.max(lines.size() - numberLines, 0);
+            lines.stream()
+                    .skip(skipNum)
+                    .forEach(System.out::println);
+
+            return 0;
+        }
+
         int wholeExitCode = 0;
         int length = files.size();
         for(int i = 0; i < length; i++) {
