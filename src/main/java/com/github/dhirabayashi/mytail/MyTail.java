@@ -28,6 +28,9 @@ public class MyTail implements Callable<Integer> {
     @CommandLine.Option(names = {"-n", "--lines"}, description = "The location is number lines.")
     private int numberLines = 10;
 
+    @CommandLine.Option(names = {"-q"}, description = "Suppresses printing of headers when multiple files are being examined.")
+    private boolean quiet;
+
     /**
      * ファイル読み取り部分を扱うインスタンス
      */
@@ -70,7 +73,7 @@ public class MyTail implements Callable<Integer> {
             var file = files.get(i);
 
             // ファイル名の表示
-            if(this.files.size() != 1) {
+            if(this.files.size() != 1 && !quiet) {
                 System.out.printf("==> %s <==%n", file.toString());
             }
 
@@ -88,7 +91,7 @@ public class MyTail implements Callable<Integer> {
                 wholeExitCode = exitCode;
             }
 
-            if(i != length - 1) {
+            if(i != length - 1 && !quiet) {
                 System.out.println();
             }
         }
