@@ -31,6 +31,9 @@ public class MyTail implements Callable<Integer> {
     @CommandLine.Option(names = {"-q"}, description = "Suppresses printing of headers when multiple files are being examined.")
     private boolean quiet;
 
+    @CommandLine.Option(names = {"-c", "--bytes"}, description = "The location is number bytes.")
+    private Integer bytes;
+
     /**
      * ファイル読み取り部分を扱うインスタンス
      */
@@ -78,7 +81,12 @@ public class MyTail implements Callable<Integer> {
             }
 
             // 実行
-            var pair = readLines(file);
+            Pair<List<String>, Integer> pair;
+            if(bytes != null) {
+                pair = readBytes(file);
+            } else {
+                pair = readLines(file);
+            }
 
             // 表示
             var lines = pair.getLeft();
@@ -148,6 +156,32 @@ public class MyTail implements Callable<Integer> {
                     coefficient++;
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Pair.of(Collections.emptyList(), 1);
+        }
+    }
+
+    Pair<List<String>, Integer> readBytes(File file) {
+        if(!file.exists()) {
+            System.err.printf("mytail: %s: No such file or directory\n", file);
+            return Pair.of(Collections.emptyList(), 1);
+        }
+
+        try(var fc = fileWrapper.open(file.toPath())) {
+            // バッファ
+            var buffer = ByteBuffer.allocate(bytes);
+
+            // スキップ
+            fc.position(fc.size() - bytes);
+
+            // 読み取り
+            buffer = fc.read(buffer);
+
+            // 出力
+            var content = Collections.singletonList(new String(buffer.array(), StandardCharsets.UTF_8));
+
+            return Pair.of(content, 0);
         } catch (IOException e) {
             e.printStackTrace();
             return Pair.of(Collections.emptyList(), 1);
