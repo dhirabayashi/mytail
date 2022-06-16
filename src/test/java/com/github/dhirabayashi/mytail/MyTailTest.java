@@ -32,6 +32,15 @@ class MyTailTest {
 
     private AutoCloseable closeable;
 
+    private final String text = """
+                        aaa
+                        bbbb
+                        ccccc
+                        dddddd
+                        fffffff
+                        gggggggg
+                        """;
+
     @BeforeEach
     private void setUp() {
         closeable = MockitoAnnotations.openMocks(this);
@@ -40,6 +49,16 @@ class MyTailTest {
     @AfterEach
     private void tearDown() throws Exception {
         closeable.close();
+    }
+
+    private Path setUpFile(Path tmpDir) throws IOException {
+        String filename = "test.txt";
+        Path tmpFilePath = tmpDir.resolve(filename);
+        Files.writeString(tmpFilePath, text);
+
+        doReturn(text.lines()).when(wrapper).lines(tmpFilePath);
+
+        return tmpFilePath;
     }
 
     @Test
@@ -55,20 +74,7 @@ class MyTailTest {
     @Test
     void test_readLines(@TempDir Path tmpDir) throws IOException {
         // 準備
-        Path tmpFilePath = tmpDir.resolve("test.txt");
-        File tmpFile = tmpFilePath.toFile();
-        var text = """
-                aaa
-                bbbb
-                ccccc
-                dddddd
-                fffffff
-                gggggggg
-                """;
-
-        Files.writeString(tmpFilePath, text);
-
-        doReturn(text.lines()).when(wrapper).lines(tmpFilePath);
+        var tmpFilePath = setUpFile(tmpDir);
 
         sut.setNumberLines(2);
 
@@ -89,7 +95,7 @@ class MyTailTest {
             doReturn(fileChannelWrapper).when(wrapper).open(tmpFilePath);
 
             // 実行
-            var actual = sut.readLines(tmpFile);
+            var actual = sut.readLines(tmpFilePath.toFile());
 
             // 検証
             verify(fileChannelWrapper, times(1)).read(expectedByteBuffer);
