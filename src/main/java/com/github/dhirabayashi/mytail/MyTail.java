@@ -75,6 +75,13 @@ public class MyTail implements Callable<Integer> {
         for(int i = 0; i < length; i++) {
             var file = files.get(i);
 
+            // ファイル存在チェック
+            if(!file.exists()) {
+                System.err.printf("mytail: %s: No such file or directory\n", file);
+                wholeExitCode = 1;
+                continue;
+            }
+
             // ファイル名の表示
             if(this.files.size() != 1 && !quiet) {
                 System.out.printf("==> %s <==%n", file.toString());
@@ -112,11 +119,6 @@ public class MyTail implements Callable<Integer> {
      * @return 行と終了コードの組
      */
     Pair<List<String>, Integer> readLines(File file) {
-        if(!file.exists()) {
-            System.err.printf("mytail: %s: No such file or directory\n", file);
-            return Pair.of(Collections.emptyList(), 1);
-        }
-
         // 先頭から全部読むと遅いため、適当な位置までスキップしてそれ以降から読み取る
         try(var fc = fileWrapper.open(file.toPath())) {
             // スキップ位置の推測
@@ -163,11 +165,6 @@ public class MyTail implements Callable<Integer> {
     }
 
     Pair<List<String>, Integer> readBytes(File file) {
-        if(!file.exists()) {
-            System.err.printf("mytail: %s: No such file or directory\n", file);
-            return Pair.of(Collections.emptyList(), 1);
-        }
-
         try(var fc = fileWrapper.open(file.toPath())) {
             // バッファ
             var buffer = ByteBuffer.allocate(bytes);
