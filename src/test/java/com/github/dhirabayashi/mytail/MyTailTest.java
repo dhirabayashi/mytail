@@ -62,16 +62,6 @@ class MyTailTest {
     }
 
     @Test
-    void test_notExist() {
-        // 実行
-        var ret = sut.readLines(new File("not_exists"));
-
-        // 検証
-        assertEquals(Collections.emptyList(), ret.getLeft());
-        assertEquals(1, ret.getRight());
-    }
-
-    @Test
     void test_readLines(@TempDir Path tmpDir) throws IOException {
         // 準備
         var tmpFilePath = setUpFile(tmpDir);
