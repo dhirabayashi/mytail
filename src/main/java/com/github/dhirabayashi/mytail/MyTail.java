@@ -84,7 +84,7 @@ public class MyTail implements Callable<Integer> {
 
             // ファイル名の表示
             if(this.files.size() != 1 && !quiet) {
-                System.out.printf("==> %s <==%n", file.toString());
+                System.out.printf("==> %s <==%n", file);
             }
 
             // 実行
@@ -164,6 +164,11 @@ public class MyTail implements Callable<Integer> {
         }
     }
 
+    /**
+     * ファイルからバイト単位で内容を取得する
+     * @param file 対象のファイル
+     * @return 行と終了コードの組。行は必ず単一の要素になる
+     */
     Pair<List<String>, Integer> readBytes(File file) {
         try(var fc = fileWrapper.open(file.toPath())) {
             // バッファ
@@ -210,5 +215,13 @@ public class MyTail implements Callable<Integer> {
      */
     void setNumberLines(int numberLines) {
         this.numberLines = numberLines;
+    }
+
+    /**
+     * 表示バイト数を設定する（テスト用）
+     * @param bytes 表示バイト数
+     */
+    void setBytes(int bytes) {
+        this.bytes = bytes;
     }
 }

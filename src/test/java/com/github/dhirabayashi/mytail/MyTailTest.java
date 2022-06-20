@@ -11,13 +11,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,6 +88,37 @@ class MyTailTest {
             // 検証
             verify(fileChannelWrapper, times(1)).read(expectedByteBuffer);
             assertEquals(List.of("fffffff", "gggggggg"), actual.getLeft());
+            assertEquals(0, actual.getRight());
+        }
+    }
+
+    @Test
+    void test_readBytes(@TempDir Path tmpDir) throws IOException {
+        // 準備
+        var tmpFilePath = setUpFile(tmpDir);
+
+        // バイト数
+        var byteLength = 12;
+        sut.setBytes(byteLength);
+        // バイトバッファ
+        var expectedByteBuffer = ByteBuffer.allocate(byteLength);
+        // 読み込み後のバッファ
+        var returnedByteBuffer = ByteBuffer.allocate(byteLength);
+        returnedByteBuffer.put("fff\ngggggggg".getBytes(StandardCharsets.UTF_8));
+
+        long size = text.length();
+        try(var fileChannelWrapper = Mockito.spy(FileChannelWrapper.class)) {
+            doReturn(size).when(fileChannelWrapper).size();
+            doReturn(returnedByteBuffer).when(fileChannelWrapper).read(expectedByteBuffer);
+
+            doReturn(fileChannelWrapper).when(wrapper).open(tmpFilePath);
+
+            // 実行
+            var actual = sut.readBytes(tmpFilePath.toFile());
+
+            // 検証
+            verify(fileChannelWrapper, times(1)).read(expectedByteBuffer);
+            assertEquals(List.of("fff\ngggggggg"), actual.getLeft());
             assertEquals(0, actual.getRight());
         }
     }
