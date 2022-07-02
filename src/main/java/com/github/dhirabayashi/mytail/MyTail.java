@@ -166,7 +166,6 @@ public class MyTail implements Callable<Integer> {
             try {
                 watchKey = watcher.take();
             } catch (InterruptedException e) {
-                System.err.println(e.getMessage());
                 return;
             }
 
@@ -189,7 +188,6 @@ public class MyTail implements Callable<Integer> {
 
             if (!watchKey.reset()) {
                 // 何らかの理由でWatchKeyが無効になった
-                System.out.println("WatchKey が無効になりました");
                 return;
             }
         }
