@@ -39,6 +39,11 @@ public class FileChannelWrapperImpl implements FileChannelWrapper {
     }
 
     @Override
+    public long position() throws IOException {
+        return channel.position();
+    }
+
+    @Override
     public ByteBuffer read(ByteBuffer dst) throws IOException {
         channel.read(dst);
         return dst;

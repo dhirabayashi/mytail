@@ -64,7 +64,8 @@ class MyTailTest {
         // 準備
         var tmpFilePath = setUpFile(tmpDir);
 
-        sut.setNumberLines(2);
+        // 表示する行数
+        int numberLines = 2;
 
         // 先頭2行のうち (長いほうの長さ + 改行コード分) * 2 * 2
         // (4 + 1) * 2 * 2 = 20
@@ -83,7 +84,7 @@ class MyTailTest {
             doReturn(fileChannelWrapper).when(wrapper).open(tmpFilePath);
 
             // 実行
-            var actual = sut.readLines(tmpFilePath.toFile());
+            var actual = sut.readByLineNum(tmpFilePath.toFile(), numberLines);
 
             // 検証
             verify(fileChannelWrapper, times(1)).read(expectedByteBuffer);
@@ -99,7 +100,6 @@ class MyTailTest {
 
         // バイト数
         var byteLength = 12;
-        sut.setBytes(byteLength);
         // バイトバッファ
         var expectedByteBuffer = ByteBuffer.allocate(byteLength);
         // 読み込み後のバッファ
@@ -114,7 +114,7 @@ class MyTailTest {
             doReturn(fileChannelWrapper).when(wrapper).open(tmpFilePath);
 
             // 実行
-            var actual = sut.readBytes(tmpFilePath.toFile());
+            var actual = sut.readByByteSize(tmpFilePath.toFile(), byteLength);
 
             // 検証
             verify(fileChannelWrapper, times(1)).read(expectedByteBuffer);
